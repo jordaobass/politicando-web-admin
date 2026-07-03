@@ -214,7 +214,9 @@ export function listarCategorias(): Promise<Categoria[]> {
 }
 
 export function listarPerguntas(): Promise<Pergunta[]> {
-  return request<Pergunta[]>("/quiz/perguntas");
+  // Endpoint admin: inclui perguntas INATIVAS e expõe peso/direção/ordem/ativa
+  // (o /quiz/perguntas público só traz as ativas, como o site principal consome).
+  return request<Pergunta[]>("/admin/perguntas");
 }
 
 export function salvarPergunta(id: string | null, body: Partial<Pergunta>): Promise<Pergunta> {

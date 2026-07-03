@@ -11,3 +11,8 @@ dist-ssr
 
 # cache do TypeScript
 *.tsbuildinfo
+
+# impeccable (contexto de design — NUNCA commitar)
+PRODUCT.md
+DESIGN.md
+.impeccable/

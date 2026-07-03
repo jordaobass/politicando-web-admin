@@ -62,6 +62,17 @@ export default function CandidaturasPage() {
   const total = data?.total ?? 0;
   const totalPaginas = Math.max(1, Math.ceil(total / TAMANHO));
 
+  // Ação em massa mexe no que é público — confirma com escopo e volume antes de aplicar.
+  function confirmarMassa(publicado: boolean) {
+    const escopo =
+      [cargo && CARGOS.find((c) => c.valor === cargo)?.rotulo, uf].filter(Boolean).join(" · ") ||
+      "todos os cargos e UFs";
+    const acao = publicado ? "Publicar" : "Ocultar";
+    if (confirm(`${acao} ${total} candidatura(s) do filtro atual (${escopo})?`)) {
+      massa.mutate(publicado);
+    }
+  }
+
   return (
     <>
       <Cabecalho
@@ -74,11 +85,17 @@ export default function CandidaturasPage() {
           <div className="min-w-48 flex-1">
             <Input
               placeholder="Buscar por nome…"
+              aria-label="Buscar candidatura por nome"
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
             />
           </div>
-          <Select value={cargo} onChange={(e) => setCargo(e.target.value)} className="w-44">
+          <Select
+            value={cargo}
+            onChange={(e) => setCargo(e.target.value)}
+            className="w-44"
+            aria-label="Filtrar por cargo"
+          >
             <option value="">Todos os cargos</option>
             {CARGOS.map((c) => (
               <option key={c.valor} value={c.valor}>
@@ -86,7 +103,12 @@ export default function CandidaturasPage() {
               </option>
             ))}
           </Select>
-          <Select value={uf} onChange={(e) => setUf(e.target.value)} className="w-28">
+          <Select
+            value={uf}
+            onChange={(e) => setUf(e.target.value)}
+            className="w-28"
+            aria-label="Filtrar por UF"
+          >
             <option value="">UF</option>
             {UFS.map((u) => (
               <option key={u} value={u}>
@@ -95,10 +117,10 @@ export default function CandidaturasPage() {
             ))}
           </Select>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => massa.mutate(true)} disabled={massa.isPending}>
+            <Button variant="outline" size="sm" onClick={() => confirmarMassa(true)} disabled={massa.isPending}>
               <Eye /> Publicar grupo
             </Button>
-            <Button variant="outline" size="sm" onClick={() => massa.mutate(false)} disabled={massa.isPending}>
+            <Button variant="outline" size="sm" onClick={() => confirmarMassa(false)} disabled={massa.isPending}>
               <EyeOff /> Ocultar grupo
             </Button>
           </div>
@@ -157,7 +179,7 @@ export default function CandidaturasPage() {
                           checked={c.publicado ?? true}
                           disabled={togglePublicacao.isPending}
                           onCheckedChange={() => togglePublicacao.mutate(c)}
-                          aria-label="Publicar candidatura"
+                          aria-label={`Publicar ${c.nomeUrna}`}
                         />
                       </div>
                     </TableCell>
