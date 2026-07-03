@@ -13,6 +13,8 @@ RUN if [ -z "$VITE_API_URL" ]; then echo "ERRO: VITE_API_URL não informado no b
 # Feature flag da área de Prompts da IA (default oculto; passe "true" só em dev/interno).
 ARG VITE_FEATURE_PROMPTS_IA
 ENV VITE_FEATURE_PROMPTS_IA=$VITE_FEATURE_PROMPTS_IA
+ARG VITE_FEATURE_INTEGRACOES
+ENV VITE_FEATURE_INTEGRACOES=$VITE_FEATURE_INTEGRACOES
 RUN npm run build
 
 # --- runtime (servidor estático; NÃO é reverse-proxy) ---

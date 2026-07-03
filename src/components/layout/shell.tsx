@@ -12,7 +12,7 @@ import {
 
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
-import { PROMPTS_IA_HABILITADO } from "@/lib/features";
+import { PROMPTS_IA_HABILITADO, INTEGRACOES_HABILITADO } from "@/lib/features";
 import { Button } from "@/components/ui/button";
 
 const ITENS = [
@@ -25,7 +25,10 @@ const ITENS = [
     ? [{ para: "/prompts", rotulo: "Prompts IA", icone: Sparkles, fim: false }]
     : []),
   { para: "/usuarios", rotulo: "Usuários", icone: Users, fim: false },
-  { para: "/integracoes", rotulo: "Integrações", icone: Plug, fim: false },
+  // Integrações só entra na navegação quando a feature está habilitada (ver features.ts).
+  ...(INTEGRACOES_HABILITADO
+    ? [{ para: "/integracoes", rotulo: "Integrações", icone: Plug, fim: false }]
+    : []),
 ];
 
 export function AdminShell() {

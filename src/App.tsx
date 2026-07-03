@@ -1,7 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import { RequireAuth } from "@/lib/auth";
-import { PROMPTS_IA_HABILITADO } from "@/lib/features";
+import { PROMPTS_IA_HABILITADO, INTEGRACOES_HABILITADO } from "@/lib/features";
 import { AdminShell } from "@/components/layout/shell";
 import LoginPage from "@/pages/login";
 import DashboardPage from "@/pages/dashboard";
@@ -45,7 +45,11 @@ export default function App() {
           </>
         )}
         <Route path="/usuarios" element={<UsuariosPage />} />
-        <Route path="/integracoes" element={<IntegracoesPage />} />
+        {/* Integrações só existe com a feature habilitada (ver features.ts). Em produção,
+            acessar /integracoes direto cai no catch-all e volta pra home. */}
+        {INTEGRACOES_HABILITADO && (
+          <Route path="/integracoes" element={<IntegracoesPage />} />
+        )}
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
