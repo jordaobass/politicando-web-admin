@@ -304,14 +304,11 @@ export interface Pergunta {
   ativa?: boolean;
 }
 
-/** Métrica de resposta por pergunta (distribuição -2..+2 + taxa de pulo). */
+/** Métrica de resposta por pergunta: total + distribuição das notas -2..+2. */
 export interface PerguntaMetrica {
   perguntaId: string;
-  texto: string;
-  categoria: string;
   totalRespostas: number;
   distribuicao: Record<string, number>; // "-2".."2" -> contagem
-  taxaPulo: number; // 0..1
 }
 
 // --- Usuários ---
