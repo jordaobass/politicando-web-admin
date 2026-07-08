@@ -6,7 +6,7 @@ import { toast } from "sonner";
 
 import { listarPerguntas, buscarMetricasPerguntas, removerPergunta } from "@/lib/api";
 import type { PerguntaMetrica } from "@/lib/types";
-import { formatarNumero, formatarPercentual } from "@/lib/format";
+import { formatarNumero } from "@/lib/format";
 import { Cabecalho } from "@/components/layout/cabecalho";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,7 +20,10 @@ const VALORES = [-2, -1, 0, 1, 2] as const;
 function Distribuicao({ m }: { m: PerguntaMetrica }) {
   const max = Math.max(1, ...VALORES.map((v) => m.distribuicao[String(v)] ?? 0));
   return (
-    <div className="flex items-end gap-0.5" title="Distribuição -2 → +2">
+    <div
+      className="flex items-end gap-0.5"
+      title="Quantas respostas em cada nota, de −2 (discordo totalmente) a +2 (concordo totalmente)"
+    >
       {VALORES.map((v) => {
         const n = m.distribuicao[String(v)] ?? 0;
         return (
@@ -53,6 +56,18 @@ export default function PerguntasPage() {
     return m;
   }, [metricas.data]);
 
+  // Agrupa por categoria (Correções v3, item 5). O backend já entrega ordenado por categoria,
+  // então o Map preserva a ordem das categorias conforme aparecem.
+  const porCategoria = React.useMemo(() => {
+    const grupos = new Map<string, NonNullable<typeof perguntas.data>>();
+    for (const p of perguntas.data ?? []) {
+      const lista = grupos.get(p.categoria) ?? [];
+      lista.push(p);
+      grupos.set(p.categoria, lista);
+    }
+    return grupos;
+  }, [perguntas.data]);
+
   const excluir = useMutation({
     mutationFn: (id: string) => removerPergunta(id),
     onSuccess: () => {
@@ -84,69 +99,68 @@ export default function PerguntasPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Afirmação</TableHead>
-                  <TableHead>Categoria</TableHead>
+                  <TableHead>Pergunta</TableHead>
                   <TableHead className="text-center">Respostas</TableHead>
-                  <TableHead className="text-center">Pulo</TableHead>
-                  <TableHead className="text-center">Distribuição</TableHead>
+                  <TableHead className="text-center">Distribuição (−2 a +2)</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {perguntas.data.map((p) => {
-                  const m = mapaMetricas.get(p.id);
-                  return (
-                    <TableRow key={p.id}>
-                      <TableCell className="max-w-md">
-                        <div className="flex items-start gap-2">
-                          <span className="mt-0.5 shrink-0 text-xs tabular-nums text-muted-foreground">
-                            #{p.ordem ?? 0}
-                          </span>
-                          <span className="line-clamp-2">{p.texto}</span>
-                          {p.ativa === false && (
-                            <Badge variant="neutral" className="shrink-0">
-                              Inativa
-                            </Badge>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="neutral">{p.categoria}</Badge>
-                      </TableCell>
-                      <TableCell className="text-center tabular-nums">
-                        {m ? formatarNumero(m.totalRespostas) : "—"}
-                      </TableCell>
-                      <TableCell className="text-center tabular-nums">
-                        {m ? formatarPercentual(m.taxaPulo) : "—"}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex justify-center">{m ? <Distribuicao m={m} /> : "—"}</div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => navigate(`/perguntas/${p.id}`)}
-                            aria-label="Editar"
-                          >
-                            <Pencil />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            aria-label="Remover"
-                            onClick={() => {
-                              if (confirm("Remover esta pergunta?")) excluir.mutate(p.id);
-                            }}
-                          >
-                            <Trash2 className="text-destructive" />
-                          </Button>
-                        </div>
+                {[...porCategoria.entries()].map(([categoria, lista]) => (
+                  <React.Fragment key={categoria}>
+                    <TableRow className="bg-muted/40 hover:bg-muted/40">
+                      <TableCell colSpan={4} className="py-2 text-sm font-semibold text-foreground">
+                        {categoria}{" "}
+                        <span className="font-normal text-muted-foreground">· {lista.length}</span>
                       </TableCell>
                     </TableRow>
-                  );
-                })}
+                    {lista.map((p) => {
+                      const m = mapaMetricas.get(p.id);
+                      return (
+                        <TableRow key={p.id}>
+                          <TableCell className="max-w-md">
+                            <div className="flex items-start gap-2">
+                              <span className="line-clamp-2">{p.texto}</span>
+                              {p.ativa === false && (
+                                <Badge variant="neutral" className="shrink-0">
+                                  Inativa
+                                </Badge>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-center tabular-nums">
+                            {m ? formatarNumero(m.totalRespostas) : "—"}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex justify-center">{m ? <Distribuicao m={m} /> : "—"}</div>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => navigate(`/perguntas/${p.id}`)}
+                                aria-label="Editar"
+                              >
+                                <Pencil />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                aria-label="Remover"
+                                onClick={() => {
+                                  if (confirm("Remover esta pergunta?")) excluir.mutate(p.id);
+                                }}
+                              >
+                                <Trash2 className="text-destructive" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </React.Fragment>
+                ))}
               </TableBody>
             </Table>
           )}

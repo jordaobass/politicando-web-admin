@@ -39,21 +39,18 @@ export default function PerguntaFormPage() {
   const categorias = useQuery({ queryKey: ["categorias"], queryFn: listarCategorias });
   const pergunta = editando ? perguntas.data?.find((p) => p.id === id) : undefined;
 
-  // Sugere a próxima ordem (maior atual + 1) para uma pergunta nova.
-  const proximaOrdem = React.useMemo(() => {
-    const ordens = perguntas.data?.map((p) => p.ordem ?? 0) ?? [];
-    return ordens.length ? Math.max(...ordens) + 1 : 0;
-  }, [perguntas.data]);
-
   const form = useForm<FormPergunta>({
     resolver: zodResolver(schema),
     defaultValues: { texto: "", categoriaId: "", peso: 1, direcaoPositiva: true, ordem: 0, ativa: true },
   });
 
-  // Preenche o formulário: dados da pergunta (edição) ou defaults sensatos (novo).
+  // Inicializa o formulário UMA vez, quando as queries necessárias resolveram — nunca
+  // depois, para não sobrescrever o que o operador já digitou (as queries carregam async).
+  const inicializado = React.useRef(false);
   React.useEffect(() => {
+    if (inicializado.current) return;
     if (editando) {
-      if (!pergunta) return;
+      if (!pergunta) return; // espera a pergunta carregar
       form.reset({
         texto: pergunta.texto,
         categoriaId: pergunta.categoriaId,
@@ -63,16 +60,18 @@ export default function PerguntaFormPage() {
         ativa: pergunta.ativa ?? true,
       });
     } else {
+      if (!categorias.data) return; // espera as categorias para a default
       form.reset({
         texto: "",
-        categoriaId: categorias.data?.[0]?.id ?? "",
+        categoriaId: categorias.data[0]?.id ?? "",
         peso: 1,
         direcaoPositiva: true,
-        ordem: proximaOrdem,
+        ordem: 0, // sem ordem manual — o quiz agrupa por categoria
         ativa: true,
       });
     }
-  }, [editando, pergunta, categorias.data, proximaOrdem, form]);
+    inicializado.current = true;
+  }, [editando, pergunta, categorias.data, form]);
 
   const salvar = useMutation({
     mutationFn: (dados: FormPergunta) => salvarPergunta(id ?? null, schema.parse(dados)),
@@ -92,7 +91,7 @@ export default function PerguntaFormPage() {
     <>
       <Cabecalho
         titulo={editando ? "Editar pergunta" : "Nova pergunta"}
-        descricao="Afirmação avaliada na escala −2…+2. Ordem e “ativa” controlam o quiz do site."
+        descricao="Pergunta avaliada pelo eleitor na escala −2…+2. As perguntas são agrupadas por categoria no quiz."
         acao={
           <Button variant="outline" onClick={() => navigate("/perguntas")}>
             <ArrowLeft /> Voltar
@@ -109,14 +108,14 @@ export default function PerguntaFormPage() {
           <CardContent className="p-6">
             <form onSubmit={form.handleSubmit((d) => salvar.mutate(d))} className="space-y-5">
               <div className="space-y-1.5">
-                <Label htmlFor="texto">Afirmação</Label>
+                <Label htmlFor="texto">Pergunta</Label>
                 <Textarea id="texto" rows={3} {...form.register("texto")} />
                 <p className="text-xs text-muted-foreground">
                   O eleitor responde de “Discordo totalmente” (−2) a “Concordo totalmente” (+2).
                 </p>
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label htmlFor="categoriaId">Categoria</Label>
                   <Select id="categoriaId" {...form.register("categoriaId")}>
@@ -127,21 +126,29 @@ export default function PerguntaFormPage() {
                       </option>
                     ))}
                   </Select>
+                  <p className="text-xs text-muted-foreground">Agrupa a pergunta no quiz.</p>
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="peso">Peso (0.1–5)</Label>
+                  <Label htmlFor="peso">Peso (0,1 a 5)</Label>
                   <Input id="peso" type="number" step="0.1" {...form.register("peso")} />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="ordem">Ordem no quiz</Label>
-                  <Input id="ordem" type="number" step="1" {...form.register("ordem")} />
+                  <p className="text-xs text-muted-foreground">
+                    Importância da pergunta dentro da categoria (multiplica a resposta). Não é a
+                    escala de resposta (−2 a +2): 1 = peso normal, &gt;1 = pesa mais, &lt;1 = pesa menos.
+                  </p>
                 </div>
               </div>
 
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" {...form.register("direcaoPositiva")} className="size-4" />
-                Direção positiva (concordar empurra para o polo 100 da categoria)
-              </label>
+              <div className="space-y-1">
+                <label className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" {...form.register("direcaoPositiva")} className="size-4" />
+                  Concordar indica posição conservadora
+                </label>
+                <p className="pl-6 text-xs text-muted-foreground">
+                  Marcado: <strong>concordar</strong> com a pergunta conta como posição mais
+                  conservadora (polo 100). Desmarque quando concordar significar posição mais
+                  progressista (polo 0).
+                </p>
+              </div>
               <label className="flex items-center gap-2 text-sm">
                 <input type="checkbox" {...form.register("ativa")} className="size-4" />
                 Ativa (aparece no quiz do site)

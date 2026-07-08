@@ -97,7 +97,9 @@ export default function CandidaturasPage() {
             aria-label="Filtrar por cargo"
           >
             <option value="">Todos os cargos</option>
-            {CARGOS.map((c) => (
+            {/* Filtro só com os cargos que temos hoje (Correções v3, item 3): Presidente,
+                Governador, Senador e Dep. Federal. Estadual/Distrital ficam fora do filtro. */}
+            {CARGOS.filter((c) => c.valor !== "DeputadoEstadual" && c.valor !== "DeputadoDistrital").map((c) => (
               <option key={c.valor} value={c.valor}>
                 {c.rotulo}
               </option>

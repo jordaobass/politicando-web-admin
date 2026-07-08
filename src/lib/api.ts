@@ -153,12 +153,6 @@ export function editarFonte(
 export function removerFonte(fonteId: string): Promise<unknown> {
   return request(`/admin/fontes/${fonteId}`, { method: "DELETE" });
 }
-export function definirPropostas(candidaturaId: string, propostas: string): Promise<unknown> {
-  return request(`/admin/candidaturas/${candidaturaId}/propostas`, {
-    method: "PUT",
-    body: JSON.stringify({ propostas }),
-  });
-}
 export function definirNumeroUrna(candidaturaId: string, numeroUrna: number | null): Promise<unknown> {
   return request(`/admin/candidaturas/${candidaturaId}/numero`, {
     method: "PUT",

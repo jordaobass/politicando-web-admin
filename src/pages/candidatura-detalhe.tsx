@@ -8,7 +8,6 @@ import {
   analisarCandidatura,
   criarFonte,
   definirNumeroUrna,
-  definirPropostas,
   listarFontes,
   obterAtividade,
   obterCandidatura,
@@ -23,7 +22,6 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { Tabs, type Aba } from "@/components/ui/tabs";
 import { Carregando, ErroEstado, Vazio } from "@/components/ui/estados";
 
@@ -165,37 +163,6 @@ function ConteudoPerfil({ c }: { c: CandidaturaDetalhe }) {
           <p className="whitespace-pre-line text-sm leading-relaxed">{p.biografia}</p>
         </div>
       )}
-    </Painel>
-  );
-}
-
-function ConteudoPropostas({ c }: { c: CandidaturaDetalhe }) {
-  const qc = useQueryClient();
-  const [texto, setTexto] = useState<string | null>(null);
-  const valor = texto ?? c.propostasResumo ?? "";
-  const salvar = useMutation({
-    mutationFn: () => definirPropostas(c.id, valor),
-    onSuccess: () => {
-      toast.success("Propostas salvas.");
-      qc.invalidateQueries({ queryKey: ["admin-candidatura", c.id] });
-    },
-    onError: erroToast,
-  });
-  const alterado = valor.trim() !== (c.propostasResumo ?? "").trim();
-  return (
-    <Painel>
-      <Textarea
-        value={valor}
-        onChange={(e) => setTexto(e.target.value)}
-        rows={10}
-        placeholder="Plano de governo / propostas do candidato (curadoria manual enquanto o TSE não libera)…"
-        className="text-sm leading-relaxed"
-      />
-      <div className="flex justify-end">
-        <Button size="sm" disabled={!alterado || salvar.isPending} onClick={() => salvar.mutate()}>
-          {salvar.isPending ? "Salvando…" : "Salvar propostas"}
-        </Button>
-      </div>
     </Painel>
   );
 }
@@ -516,7 +483,6 @@ export default function CandidaturaDetalhePage() {
 
   const abas: Aba[] = [
     { id: "perfil", label: "Perfil", conteudo: <ConteudoPerfil c={c} /> },
-    { id: "propostas", label: "Propostas", conteudo: <ConteudoPropostas c={c} /> },
     { id: "fontes", label: "Fontes IA", conteudo: <ConteudoFontes candidaturaId={c.id} /> },
     { id: "analise", label: `Análise${cont(c.scores.length)}`, conteudo: <ConteudoScores c={c} /> },
     { id: "projetos", label: `Projetos${cont(nProj)}`, conteudo: painelAtividade((a) => <ConteudoProjetos a={a} leg={leg} opcoes={legislaturas} onLeg={onLeg} />) },
