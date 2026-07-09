@@ -15,24 +15,26 @@ import { useAuth } from "@/lib/auth";
 import { PROMPTS_IA_HABILITADO, INTEGRACOES_HABILITADO } from "@/lib/features";
 import { Button } from "@/components/ui/button";
 
+// `perm` = permissão granular exigida para ver o item (undefined = qualquer staff).
 const ITENS = [
-  { para: "/", rotulo: "Dashboard", icone: LayoutDashboard, fim: true },
-  { para: "/candidaturas", rotulo: "Candidaturas", icone: Vote, fim: false },
-  { para: "/partidos", rotulo: "Partidos", icone: Flag, fim: false },
-  { para: "/perguntas", rotulo: "Perguntas", icone: ListChecks, fim: false },
+  { para: "/", rotulo: "Dashboard", icone: LayoutDashboard, fim: true, perm: undefined },
+  { para: "/candidaturas", rotulo: "Candidaturas", icone: Vote, fim: false, perm: "candidaturas.gerir" },
+  { para: "/partidos", rotulo: "Partidos", icone: Flag, fim: false, perm: "partidos.gerir" },
+  { para: "/perguntas", rotulo: "Perguntas", icone: ListChecks, fim: false, perm: "perguntas.gerir" },
   // Prompts da IA só entra na navegação quando a feature está habilitada (ver features.ts).
   ...(PROMPTS_IA_HABILITADO
-    ? [{ para: "/prompts", rotulo: "Prompts IA", icone: Sparkles, fim: false }]
+    ? [{ para: "/prompts", rotulo: "Prompts IA", icone: Sparkles, fim: false, perm: "prompts.gerir" }]
     : []),
-  { para: "/usuarios", rotulo: "Usuários", icone: Users, fim: false },
+  { para: "/usuarios", rotulo: "Usuários", icone: Users, fim: false, perm: "usuarios.gerir" },
   // Integrações só entra na navegação quando a feature está habilitada (ver features.ts).
   ...(INTEGRACOES_HABILITADO
-    ? [{ para: "/integracoes", rotulo: "Integrações", icone: Plug, fim: false }]
+    ? [{ para: "/integracoes", rotulo: "Integrações", icone: Plug, fim: false, perm: "scoring.executar" }]
     : []),
 ];
 
 export function AdminShell() {
-  const { usuario, sair } = useAuth();
+  const { usuario, sair, temPermissao } = useAuth();
+  const itens = ITENS.filter((i) => !i.perm || temPermissao(i.perm));
 
   return (
     <div className="flex h-full min-h-screen">
@@ -41,7 +43,7 @@ export function AdminShell() {
           <span className="text-xl">🗳️</span> Politicando
         </div>
         <nav className="flex-1 space-y-1 p-3">
-          {ITENS.map((item) => (
+          {itens.map((item) => (
             <NavLink
               key={item.para}
               to={item.para}

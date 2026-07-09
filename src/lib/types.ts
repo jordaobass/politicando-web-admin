@@ -1,6 +1,6 @@
 // Tipos que espelham os contratos da API .NET (base /api).
 
-export type Papel = "Usuario" | "Admin";
+export type Papel = "Usuario" | "Admin" | "SuperAdmin";
 
 export interface UsuarioSessao {
   id: string;
@@ -8,6 +8,32 @@ export interface UsuarioSessao {
   email: string;
   papel: Papel;
   fotoUrl: string | null;
+  /** Chaves de permissão do usuário (SuperAdmin = todas). Base do gating do painel. */
+  permissoes: string[];
+}
+
+/** Uma permissão do catálogo (matriz de gestão de admins). */
+export interface PermissaoCatalogo {
+  chave: string;
+  nome: string;
+  grupo: string;
+}
+
+/** Convite de admin pendente. */
+export interface ConviteAdmin {
+  id: string;
+  nome: string;
+  email: string;
+  papel: Papel;
+  expiraEm: string;
+  criadoEm: string;
+}
+
+/** Retorno da criação de convite: token cru p/ montar o link copiável. */
+export interface ConviteCriado {
+  id: string;
+  token: string;
+  expiraEm: string;
 }
 
 export interface AuthResponse {

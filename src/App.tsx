@@ -4,6 +4,7 @@ import { RequireAuth } from "@/lib/auth";
 import { PROMPTS_IA_HABILITADO, INTEGRACOES_HABILITADO } from "@/lib/features";
 import { AdminShell } from "@/components/layout/shell";
 import LoginPage from "@/pages/login";
+import DefinirSenhaPage from "@/pages/definir-senha";
 import DashboardPage from "@/pages/dashboard";
 import CandidaturasPage from "@/pages/candidaturas";
 import CandidaturaDetalhePage from "@/pages/candidatura-detalhe";
@@ -20,6 +21,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/definir-senha" element={<DefinirSenhaPage />} />
       <Route
         element={
           <RequireAuth>
