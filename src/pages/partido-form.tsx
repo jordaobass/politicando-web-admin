@@ -54,9 +54,12 @@ export default function PartidoFormPage() {
 
   const form = useForm<FormPartido>({ resolver: zodResolver(schema), defaultValues: VAZIO });
 
-  // Preenche o formulário quando o partido em edição termina de carregar.
+  // Preenche o formulário UMA vez, quando o partido em edição carrega — nunca depois, para
+  // não sobrescrever o que o operador editou caso a query refaça o fetch.
+  const inicializado = React.useRef(false);
   React.useEffect(() => {
-    if (!partido) return;
+    if (inicializado.current || !partido) return;
+    inicializado.current = true;
     form.reset({
       sigla: partido.sigla,
       nome: partido.nome,
