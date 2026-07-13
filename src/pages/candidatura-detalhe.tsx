@@ -11,7 +11,6 @@ import {
   listarFontes,
   obterAtividade,
   obterCandidatura,
-  rasparFonte,
   removerFonte,
 } from "@/lib/api";
 import { CARGOS, ORIGENS, type AtividadeLegislativa, type CandidaturaDetalhe } from "@/lib/types";
@@ -21,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
 import { Tabs, type Aba } from "@/components/ui/tabs";
 import { Carregando, ErroEstado, Vazio } from "@/components/ui/estados";
@@ -167,9 +167,11 @@ function ConteudoPerfil({ c }: { c: CandidaturaDetalhe }) {
   );
 }
 
+const MAX_FONTE = 1000;
+
 function ConteudoFontes({ candidaturaId }: { candidaturaId: string }) {
   const qc = useQueryClient();
-  const [url, setUrl] = useState("");
+  const [conteudo, setConteudo] = useState("");
   const [rotulo, setRotulo] = useState("");
   const fontes = useQuery({
     queryKey: ["admin-fontes", candidaturaId],
@@ -178,16 +180,8 @@ function ConteudoFontes({ candidaturaId }: { candidaturaId: string }) {
   const inval = () => qc.invalidateQueries({ queryKey: ["admin-fontes", candidaturaId] });
 
   const criar = useMutation({
-    mutationFn: () => criarFonte(candidaturaId, url, rotulo || undefined),
-    onSuccess: () => { setUrl(""); setRotulo(""); inval(); },
-    onError: erroToast,
-  });
-  const raspar = useMutation({
-    mutationFn: (id: string) => rasparFonte(id),
-    onSuccess: (f) => {
-      f.status === "Ok" ? toast.success("Conteúdo raspado.") : toast.error(f.erro ?? "Falha ao raspar.");
-      inval();
-    },
+    mutationFn: () => criarFonte(candidaturaId, conteudo.trim(), rotulo || undefined),
+    onSuccess: () => { setConteudo(""); setRotulo(""); inval(); },
     onError: erroToast,
   });
   const remover = useMutation({
@@ -199,14 +193,29 @@ function ConteudoFontes({ candidaturaId }: { candidaturaId: string }) {
   return (
     <Painel>
       <p className="text-sm text-muted-foreground">
-        URLs de programa/propostas/manifesto do candidato. O conteúdo raspado vira evidência para a análise da IA.
+        Trechos de programa, propostas ou manifesto do candidato (texto livre, até {MAX_FONTE} caracteres).
+        Cada fonte entra direto como evidência na análise da IA.
       </p>
-      <div className="flex flex-wrap gap-2">
-        <Input placeholder="https://…" value={url} onChange={(e) => setUrl(e.target.value)} className="min-w-64 flex-1" />
-        <Input placeholder="rótulo (ex: Plano 2022)" value={rotulo} onChange={(e) => setRotulo(e.target.value)} className="w-48" />
-        <Button size="sm" disabled={!url.trim() || criar.isPending} onClick={() => criar.mutate()}>
-          Adicionar
-        </Button>
+      <div className="space-y-2">
+        <Input
+          placeholder="rótulo (ex: Plano 2022)"
+          value={rotulo}
+          onChange={(e) => setRotulo(e.target.value)}
+          className="w-full sm:w-64"
+        />
+        <Textarea
+          placeholder="Cole aqui o texto da fonte…"
+          value={conteudo}
+          maxLength={MAX_FONTE}
+          rows={5}
+          onChange={(e) => setConteudo(e.target.value)}
+        />
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-xs text-muted-foreground">{conteudo.length}/{MAX_FONTE}</span>
+          <Button size="sm" disabled={!conteudo.trim() || criar.isPending} onClick={() => criar.mutate()}>
+            Adicionar fonte
+          </Button>
+        </div>
       </div>
 
       {fontes.isLoading && <Carregando />}
@@ -214,23 +223,17 @@ function ConteudoFontes({ candidaturaId }: { candidaturaId: string }) {
       {fontes.data?.map((f) => (
         <div key={f.id} className="space-y-1 rounded-md border p-3">
           <div className="flex items-center justify-between gap-2">
-            <a href={f.url} target="_blank" rel="noreferrer" className="min-w-0 truncate font-medium hover:underline">
-              {f.rotulo || f.url}
-            </a>
+            <span className="min-w-0 truncate font-medium">{f.rotulo || "Fonte de texto"}</span>
             <div className="flex shrink-0 items-center gap-2">
               <Badge variant="neutral">
                 {f.status}
                 {f.conteudo ? ` · ${f.conteudo.length}c` : ""}
               </Badge>
-              <Button variant="outline" size="sm" disabled={raspar.isPending} onClick={() => raspar.mutate(f.id)}>
-                Raspar
-              </Button>
               <Button variant="ghost" size="icon" onClick={() => remover.mutate(f.id)} aria-label="Remover fonte">
                 <Trash2 />
               </Button>
             </div>
           </div>
-          {f.erro && <p className="text-xs text-destructive">{f.erro}</p>}
           {f.conteudo && <p className="line-clamp-3 text-xs text-muted-foreground">{f.conteudo}</p>}
         </div>
       ))}
