@@ -1,40 +1,14 @@
 import { NavLink, Outlet } from "react-router-dom";
-import {
-  LayoutDashboard,
-  Users,
-  Vote,
-  Flag,
-  ListChecks,
-  Plug,
-  Sparkles,
-  LogOut,
-} from "lucide-react";
+import { LogOut } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
-import { PROMPTS_IA_HABILITADO, INTEGRACOES_HABILITADO } from "@/lib/features";
+import { ITENS_NAV } from "@/lib/navegacao";
 import { Button } from "@/components/ui/button";
-
-// `perm` = permissão granular exigida para ver o item (undefined = qualquer staff).
-const ITENS = [
-  { para: "/", rotulo: "Dashboard", icone: LayoutDashboard, fim: true, perm: undefined },
-  { para: "/candidaturas", rotulo: "Candidaturas", icone: Vote, fim: false, perm: "candidaturas.gerir" },
-  { para: "/partidos", rotulo: "Partidos", icone: Flag, fim: false, perm: "partidos.gerir" },
-  { para: "/perguntas", rotulo: "Perguntas", icone: ListChecks, fim: false, perm: "perguntas.gerir" },
-  // Prompts da IA só entra na navegação quando a feature está habilitada (ver features.ts).
-  ...(PROMPTS_IA_HABILITADO
-    ? [{ para: "/prompts", rotulo: "Prompts IA", icone: Sparkles, fim: false, perm: "prompts.gerir" }]
-    : []),
-  { para: "/usuarios", rotulo: "Usuários", icone: Users, fim: false, perm: "usuarios.gerir" },
-  // Integrações só entra na navegação quando a feature está habilitada (ver features.ts).
-  ...(INTEGRACOES_HABILITADO
-    ? [{ para: "/integracoes", rotulo: "Integrações", icone: Plug, fim: false, perm: "scoring.executar" }]
-    : []),
-];
 
 export function AdminShell() {
   const { usuario, sair, temPermissao } = useAuth();
-  const itens = ITENS.filter((i) => !i.perm || temPermissao(i.perm));
+  const itens = ITENS_NAV.filter((i) => !i.perm || temPermissao(i.perm));
 
   return (
     <div className="flex h-full min-h-screen">

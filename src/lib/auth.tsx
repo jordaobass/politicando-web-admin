@@ -1,7 +1,8 @@
 import * as React from "react";
-import { Navigate, useLocation } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 
 import { login as apiLogin, ApiError, TOKEN_KEY } from "@/lib/api";
+import { itemDaRota } from "@/lib/navegacao";
 import type { UsuarioSessao } from "@/lib/types";
 
 const USUARIO_KEY = "politicando:admin:usuario";
@@ -88,4 +89,26 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
   const local = useLocation();
   if (!autenticado) return <Navigate to="/login" state={{ de: local.pathname }} replace />;
   return <>{children}</>;
+}
+
+/**
+ * Gating por rota (item 7.7): bloqueia a rota atual se o usuário não tem a permissão do
+ * item de navegação correspondente. O backend já é a autoridade (403); isto evita a tela
+ * quebrada de quem acessa a URL direto e dá um estado limpo de "sem acesso".
+ */
+export function GatePorRota() {
+  const { temPermissao } = useAuth();
+  const { pathname } = useLocation();
+  const item = itemDaRota(pathname);
+  if (item?.perm && !temPermissao(item.perm)) {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-2 text-center">
+        <p className="text-lg font-semibold">Sem acesso a esta área</p>
+        <p className="max-w-sm text-sm text-muted-foreground">
+          Você não tem permissão para acessar esta seção. Fale com um administrador se precisar de acesso.
+        </p>
+      </div>
+    );
+  }
+  return <Outlet />;
 }

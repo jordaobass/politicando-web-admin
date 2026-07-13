@@ -245,6 +245,7 @@ export function atualizarPrompt(chave: string, conteudo: string): Promise<Prompt
 // --- Usuários / RBAC (item 7) ---
 export function listarUsuarios(filtros: {
   q?: string;
+  papel?: string;
   pagina?: number;
   tamanho?: number;
 }): Promise<PagedResult<UsuarioAdmin>> {

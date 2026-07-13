@@ -42,16 +42,17 @@ export default function UsuariosPage() {
   const ehSuper = usuario?.papel === "SuperAdmin";
   const qc = useQueryClient();
   const [busca, setBusca] = React.useState("");
+  const [papel, setPapel] = React.useState("");
   const [pagina, setPagina] = React.useState(1);
   const [convidando, setConvidando] = React.useState(false);
   const [permsDe, setPermsDe] = React.useState<UsuarioAdmin | null>(null);
   const q = useDebounce(busca);
 
-  React.useEffect(() => setPagina(1), [q]);
+  React.useEffect(() => setPagina(1), [q, papel]);
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["usuarios", q, pagina],
-    queryFn: () => listarUsuarios({ q, pagina, tamanho: TAMANHO }),
+    queryKey: ["usuarios", q, papel, pagina],
+    queryFn: () => listarUsuarios({ q, papel: papel || undefined, pagina, tamanho: TAMANHO }),
     retry: false,
   });
   const { data: convites } = useQuery({ queryKey: ["convites"], queryFn: listarConvites, retry: false });
@@ -119,13 +120,24 @@ export default function UsuariosPage() {
       )}
 
       <Card className="mb-4">
-        <CardContent className="p-4">
+        <CardContent className="flex flex-wrap items-center gap-3 p-4">
           <Input
             placeholder="Buscar por nome ou e-mail…"
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
             className="max-w-sm"
           />
+          <Select
+            value={papel}
+            onChange={(e) => setPapel(e.target.value)}
+            aria-label="Filtrar por perfil"
+            className="h-9 w-44"
+          >
+            <option value="">Todos os perfis</option>
+            {PAPEIS.map((p) => (
+              <option key={p.valor} value={p.valor}>{p.rotulo}</option>
+            ))}
+          </Select>
         </CardContent>
       </Card>
 
