@@ -138,14 +138,11 @@ export function obterAtividade(id: string): Promise<AtividadeLegislativa> {
 export function listarFontes(candidaturaId: string): Promise<FonteScraping[]> {
   return request<FonteScraping[]>(`/admin/candidaturas/${candidaturaId}/fontes`);
 }
-export function criarFonte(candidaturaId: string, url: string, rotulo?: string): Promise<FonteScraping> {
+export function criarFonte(candidaturaId: string, conteudo: string, rotulo?: string): Promise<FonteScraping> {
   return request<FonteScraping>(`/admin/candidaturas/${candidaturaId}/fontes`, {
     method: "POST",
-    body: JSON.stringify({ url, rotulo }),
+    body: JSON.stringify({ conteudo, rotulo }),
   });
-}
-export function rasparFonte(fonteId: string): Promise<FonteScraping> {
-  return request<FonteScraping>(`/admin/fontes/${fonteId}/raspar`, { method: "POST" });
 }
 export function editarFonte(
   fonteId: string,
