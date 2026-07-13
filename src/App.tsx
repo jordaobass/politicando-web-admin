@@ -1,9 +1,10 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 
-import { RequireAuth } from "@/lib/auth";
+import { RequireAuth, GatePorRota } from "@/lib/auth";
 import { PROMPTS_IA_HABILITADO, INTEGRACOES_HABILITADO } from "@/lib/features";
 import { AdminShell } from "@/components/layout/shell";
 import LoginPage from "@/pages/login";
+import DefinirSenhaPage from "@/pages/definir-senha";
 import DashboardPage from "@/pages/dashboard";
 import CandidaturasPage from "@/pages/candidaturas";
 import CandidaturaDetalhePage from "@/pages/candidatura-detalhe";
@@ -20,6 +21,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/definir-senha" element={<DefinirSenhaPage />} />
       <Route
         element={
           <RequireAuth>
@@ -27,8 +29,10 @@ export default function App() {
           </RequireAuth>
         }
       >
+        {/* GatePorRota bloqueia a rota conforme a permissão do item de navegação (item 7.7);
+            o backend continua sendo a autoridade (403). Deriva de ITENS_NAV (fonte única). */}
+        <Route element={<GatePorRota />}>
         <Route path="/" element={<DashboardPage />} />
-        <Route path="/candidaturas" element={<CandidaturasPage />} />
         <Route path="/candidaturas/:id" element={<CandidaturaDetalhePage />} />
         <Route path="/partidos" element={<PartidosPage />} />
         <Route path="/partidos/novo" element={<PartidoFormPage />} />
@@ -50,6 +54,7 @@ export default function App() {
         {INTEGRACOES_HABILITADO && (
           <Route path="/integracoes" element={<IntegracoesPage />} />
         )}
+        </Route>
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

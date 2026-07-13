@@ -17,6 +17,9 @@ import type {
   PerguntaMetrica,
   PromptIa,
   UsuarioAdmin,
+  PermissaoCatalogo,
+  ConviteAdmin,
+  ConviteCriado,
 } from "@/lib/types";
 
 export const API_BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:11601/api";
@@ -239,11 +242,59 @@ export function atualizarPrompt(chave: string, conteudo: string): Promise<Prompt
   });
 }
 
-// --- Usuários ---
+// --- Usuários / RBAC (item 7) ---
 export function listarUsuarios(filtros: {
   q?: string;
+  papel?: string;
   pagina?: number;
   tamanho?: number;
 }): Promise<PagedResult<UsuarioAdmin>> {
   return request<PagedResult<UsuarioAdmin>>(`/admin/usuarios${montarQuery(filtros)}`);
+}
+
+export function listarCatalogoPermissoes(): Promise<PermissaoCatalogo[]> {
+  return request<PermissaoCatalogo[]>("/admin/usuarios/permissoes");
+}
+
+export function permissoesDoUsuario(id: string): Promise<string[]> {
+  return request<string[]>(`/admin/usuarios/${id}/permissoes`);
+}
+
+export function definirPermissoes(id: string, chaves: string[]): Promise<void> {
+  return request<void>(`/admin/usuarios/${id}/permissoes`, {
+    method: "PUT",
+    body: JSON.stringify({ chaves }),
+  });
+}
+
+export function alterarPapel(id: string, papel: string): Promise<void> {
+  return request<void>(`/admin/usuarios/${id}/papel`, {
+    method: "PUT",
+    body: JSON.stringify({ papel }),
+  });
+}
+
+export function revogarAdmin(id: string): Promise<void> {
+  return request<void>(`/admin/usuarios/${id}`, { method: "DELETE" });
+}
+
+export function listarConvites(): Promise<ConviteAdmin[]> {
+  return request<ConviteAdmin[]>("/admin/usuarios/convites");
+}
+
+export function criarConvite(body: { nome: string; email: string; papel: string }): Promise<ConviteCriado> {
+  return request<ConviteCriado>("/admin/usuarios/convites", { method: "POST", body: JSON.stringify(body) });
+}
+
+export function revogarConvite(id: string): Promise<void> {
+  return request<void>(`/admin/usuarios/convites/${id}`, { method: "DELETE" });
+}
+
+// --- Convite público (definir senha, item 7.5) ---
+export function validarConvite(token: string): Promise<{ nome: string; email: string; papel: string }> {
+  return request(`/auth/convite/${encodeURIComponent(token)}`);
+}
+
+export function aceitarConvite(body: { token: string; senha: string }): Promise<AuthResponse> {
+  return request<AuthResponse>("/auth/convite/aceitar", { method: "POST", body: JSON.stringify(body) });
 }
