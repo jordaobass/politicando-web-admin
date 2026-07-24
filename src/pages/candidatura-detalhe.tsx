@@ -16,6 +16,7 @@ import {
 import { CARGOS, ORIGENS, type AtividadeLegislativa, type CandidaturaDetalhe } from "@/lib/types";
 import { formatarData, formatarDataHora, formatarMoeda, formatarNumero } from "@/lib/format";
 import { Cabecalho } from "@/components/layout/cabecalho";
+import { TextoRico } from "@/components/texto-rico";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -273,8 +274,10 @@ function ConteudoScores({ c }: { c: CandidaturaDetalhe }) {
                   style={{ width: `${(Math.min(5, Math.max(0, eng)) / 5) * 100}%` }}
                 />
               </div>
-              {s.posicaoSintese && <p className="text-sm font-medium">{s.posicaoSintese}</p>}
-              {s.justificativa && <p className="text-sm text-muted-foreground">{s.justificativa}</p>}
+              {s.posicaoSintese && <TextoRico texto={s.posicaoSintese} className="text-sm font-medium" />}
+              {s.justificativa && (
+                <TextoRico texto={s.justificativa} className="text-sm text-muted-foreground" />
+              )}
               {s.confianca != null && (
                 <p className="text-xs text-muted-foreground">
                   confiança {(s.confianca * 100).toFixed(0)}%
@@ -546,7 +549,7 @@ export default function CandidaturaDetalhePage() {
         <Card className="mb-4">
           <CardContent className="space-y-1 p-5">
             <h2 className="text-sm font-semibold">Observação geral (IA)</h2>
-            <p className="text-sm leading-relaxed text-muted-foreground">{c.observacaoIa}</p>
+            <TextoRico texto={c.observacaoIa} className="text-sm leading-relaxed text-muted-foreground" />
           </CardContent>
         </Card>
       )}
