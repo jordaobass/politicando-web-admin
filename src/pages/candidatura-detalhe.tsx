@@ -8,12 +8,13 @@ import {
   analisarCandidatura,
   criarFonte,
   definirNumeroUrna,
+  editarFonte,
   listarFontes,
   obterAtividade,
   obterCandidatura,
   removerFonte,
 } from "@/lib/api";
-import { CARGOS, ORIGENS, type AtividadeLegislativa, type CandidaturaDetalhe } from "@/lib/types";
+import { CARGOS, ORIGENS, type AtividadeLegislativa, type CandidaturaDetalhe, type FonteScraping } from "@/lib/types";
 import { formatarData, formatarDataHora, formatarMoeda, formatarNumero } from "@/lib/format";
 import { Cabecalho } from "@/components/layout/cabecalho";
 import { TextoRico } from "@/components/texto-rico";
@@ -185,11 +186,6 @@ function ConteudoFontes({ candidaturaId }: { candidaturaId: string }) {
     onSuccess: () => { setConteudo(""); setRotulo(""); inval(); },
     onError: erroToast,
   });
-  const remover = useMutation({
-    mutationFn: (id: string) => removerFonte(id),
-    onSuccess: inval,
-    onError: erroToast,
-  });
 
   return (
     <Painel>
@@ -222,23 +218,71 @@ function ConteudoFontes({ candidaturaId }: { candidaturaId: string }) {
       {fontes.isLoading && <Carregando />}
       {fontes.data?.length === 0 && <Vazio texto="Nenhuma fonte cadastrada." />}
       {fontes.data?.map((f) => (
-        <div key={f.id} className="space-y-1 rounded-md border p-3">
-          <div className="flex items-center justify-between gap-2">
-            <span className="min-w-0 truncate font-medium">{f.rotulo || "Fonte de texto"}</span>
-            <div className="flex shrink-0 items-center gap-2">
-              <Badge variant="neutral">
-                {f.status}
-                {f.conteudo ? ` · ${f.conteudo.length}c` : ""}
-              </Badge>
-              <Button variant="ghost" size="icon" onClick={() => remover.mutate(f.id)} aria-label="Remover fonte">
-                <Trash2 />
-              </Button>
-            </div>
-          </div>
-          {f.conteudo && <p className="line-clamp-3 text-xs text-muted-foreground">{f.conteudo}</p>}
-        </div>
+        <ItemFonte key={f.id} fonte={f} aoMudar={inval} />
       ))}
     </Painel>
+  );
+}
+
+/** Item de fonte editável: mostra o texto COMPLETO (sem cortar), permite editar rótulo/conteúdo
+ *  (PUT /admin/fontes/:id) e remover. Cada fonte entra como evidência direta na análise da IA. */
+function ItemFonte({ fonte, aoMudar }: { fonte: FonteScraping; aoMudar: () => void }) {
+  const [rotulo, setRotulo] = useState(fonte.rotulo ?? "");
+  const [conteudo, setConteudo] = useState(fonte.conteudo ?? "");
+  const alterado = rotulo !== (fonte.rotulo ?? "") || conteudo !== (fonte.conteudo ?? "");
+
+  const salvar = useMutation({
+    mutationFn: () => editarFonte(fonte.id, { rotulo: rotulo.trim() || undefined, conteudo: conteudo.trim() }),
+    onSuccess: () => { toast.success("Fonte atualizada."); aoMudar(); },
+    onError: erroToast,
+  });
+  const remover = useMutation({
+    mutationFn: () => removerFonte(fonte.id),
+    onSuccess: aoMudar,
+    onError: erroToast,
+  });
+
+  return (
+    <div className="space-y-2 rounded-md border p-3">
+      <div className="flex items-center justify-between gap-2">
+        <Input
+          value={rotulo}
+          onChange={(e) => setRotulo(e.target.value)}
+          placeholder="rótulo (ex: Plano 2022)"
+          className="h-8 w-full sm:w-64"
+          aria-label="Rótulo da fonte"
+        />
+        <div className="flex shrink-0 items-center gap-2">
+          <Badge variant="neutral">{fonte.status}</Badge>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => remover.mutate()}
+            disabled={remover.isPending}
+            aria-label="Remover fonte"
+          >
+            <Trash2 />
+          </Button>
+        </div>
+      </div>
+      <Textarea
+        value={conteudo}
+        maxLength={MAX_FONTE}
+        rows={6}
+        onChange={(e) => setConteudo(e.target.value)}
+        aria-label="Conteúdo da fonte"
+      />
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-xs text-muted-foreground">{conteudo.length}/{MAX_FONTE}</span>
+        <Button
+          size="sm"
+          disabled={!alterado || !conteudo.trim() || salvar.isPending}
+          onClick={() => salvar.mutate()}
+        >
+          {salvar.isPending ? "…" : "Salvar"}
+        </Button>
+      </div>
+    </div>
   );
 }
 
