@@ -33,6 +33,7 @@ export default function App() {
             o backend continua sendo a autoridade (403). Deriva de ITENS_NAV (fonte única). */}
         <Route element={<GatePorRota />}>
         <Route path="/" element={<DashboardPage />} />
+        <Route path="/candidaturas" element={<CandidaturasPage />} />
         <Route path="/candidaturas/:id" element={<CandidaturaDetalhePage />} />
         <Route path="/partidos" element={<PartidosPage />} />
         <Route path="/partidos/novo" element={<PartidoFormPage />} />
