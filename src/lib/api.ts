@@ -25,6 +25,22 @@ import type {
 export const API_BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:11601/api";
 export const TOKEN_KEY = "politicando:admin:token";
 
+/**
+ * Resolve um caminho servido pela API (foto de político, logo de partido) contra a origem
+ * dela. A API devolve esses caminhos relativos — `/api/fotos/politico/{id}` —, o que só
+ * funciona quando o admin e a API estão no mesmo host. Publicado na Vercel, o admin fala
+ * com a API por URL absoluta, e o caminho relativo caía no domínio do próprio admin: toda
+ * foto quebrava (Correções v8, item 4).
+ */
+export function urlDaApi(caminho: string | null | undefined): string | undefined {
+  if (!caminho) return undefined;
+  if (/^https?:\/\//i.test(caminho) || caminho.startsWith("data:")) return caminho;
+
+  // API_BASE_URL termina em "/api" — o mesmo prefixo que o caminho já traz.
+  const origem = API_BASE_URL.replace(/\/api\/?$/, "");
+  return `${origem}${caminho.startsWith("/") ? "" : "/"}${caminho}`;
+}
+
 export class ApiError extends Error {
   constructor(
     public readonly status: number,
