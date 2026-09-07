@@ -13,6 +13,7 @@ import {
   obterAtividade,
   obterCandidatura,
   removerFonte,
+  urlDaApi,
 } from "@/lib/api";
 import { CARGOS, ORIGENS, type AtividadeLegislativa, type CandidaturaDetalhe, type FonteScraping } from "@/lib/types";
 import { formatarData, formatarDataHora, formatarMoeda, formatarNumero } from "@/lib/format";
@@ -568,7 +569,11 @@ export default function CandidaturaDetalhePage() {
 
       <div className="mb-4 flex items-center gap-4">
         {c.politico.fotoUrl ? (
-          <img src={c.politico.fotoUrl} alt="" className="size-16 rounded-full object-cover" />
+          <img
+            src={urlDaApi(c.politico.fotoUrl)}
+            alt=""
+            className="size-16 rounded-full object-cover"
+          />
         ) : (
           <div className="size-16 rounded-full bg-muted" />
         )}
