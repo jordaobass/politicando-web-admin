@@ -16,6 +16,14 @@ import type {
   Pergunta,
   PerguntaMetrica,
   PromptIa,
+  ResumoAcessos,
+  SerieUso,
+  FunilPublicacao,
+  CoberturaDados,
+  Faltante,
+  SaudeScoring,
+  SaudeOperacional,
+  AcessosPorRegiao,
   UsuarioAdmin,
   PermissaoCatalogo,
   ConviteAdmin,
@@ -102,6 +110,47 @@ export function buscarDashboard(): Promise<DashboardAdmin> {
 
 export function buscarIntegracoes(): Promise<IntegracaoAdmin[]> {
   return request<IntegracaoAdmin[]>("/admin/integracoes");
+}
+
+/** Perfis de candidato mais abertos no período (contagem feita no backend, não no GA). */
+export function buscarMaisAcessados(dias: number): Promise<ResumoAcessos> {
+  return request<ResumoAcessos>(`/admin/metricas/mais-acessados${montarQuery({ dias, limite: 10 })}`);
+}
+
+/** De onde vem a audiência (país/UF/cidade). Agregado por dia, sem IP. */
+export function buscarRegioes(dias: number): Promise<AcessosPorRegiao> {
+  return request<AcessosPorRegiao>(`/admin/metricas/regioes${montarQuery({ dias })}`);
+}
+
+export function buscarSerieUso(dias: number): Promise<SerieUso> {
+  return request<SerieUso>(`/admin/metricas/serie-uso${montarQuery({ dias })}`);
+}
+
+export function buscarFunilPublicacao(): Promise<FunilPublicacao> {
+  return request<FunilPublicacao>("/admin/metricas/funil-publicacao");
+}
+
+export function buscarCobertura(): Promise<CoberturaDados> {
+  return request<CoberturaDados>("/admin/metricas/cobertura");
+}
+
+/** Drill-down: quem são os publicados que faltam determinado dado. */
+export function buscarFaltantes(
+  chave: string,
+  pagina = 1,
+  tamanho = 20,
+): Promise<PagedResult<Faltante>> {
+  return request<PagedResult<Faltante>>(
+    `/admin/metricas/cobertura/${chave}/faltantes${montarQuery({ pagina, tamanho })}`,
+  );
+}
+
+export function buscarSaudeScoring(): Promise<SaudeScoring> {
+  return request<SaudeScoring>("/admin/metricas/scoring");
+}
+
+export function buscarSaudeOperacional(): Promise<SaudeOperacional> {
+  return request<SaudeOperacional>("/admin/metricas/operacao");
 }
 
 export function buscarExecucoes(limite = 50): Promise<ExecucaoLog[]> {
