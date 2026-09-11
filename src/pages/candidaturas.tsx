@@ -8,6 +8,7 @@ import {
   listarCandidaturasAdmin,
   definirPublicacao,
   definirPublicacaoEmMassa,
+  urlDaApi,
 } from "@/lib/api";
 import { CARGOS, ORIGENS, UFS, type CandidaturaAdmin } from "@/lib/types";
 import { useDebounce } from "@/hooks/use-debounce";
@@ -157,7 +158,7 @@ export default function CandidaturasPage() {
                       >
                         {c.fotoUrl ? (
                           <img
-                            src={c.fotoUrl}
+                            src={urlDaApi(c.fotoUrl)}
                             alt=""
                             className="size-8 rounded-full object-cover"
                           />
