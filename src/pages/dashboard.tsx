@@ -12,13 +12,10 @@ import { FunilPublicacao } from "@/components/dashboard/funil-publicacao";
 import { CoberturaDados } from "@/components/dashboard/cobertura-dados";
 import { MaisAcessados } from "@/components/dashboard/mais-acessados";
 import { AcessosRegiao } from "@/components/dashboard/acessos-regiao";
-import { SaudeScoring } from "@/components/dashboard/saude-scoring";
-import { SaudeOperacional } from "@/components/dashboard/saude-operacional";
 
 /**
- * Dashboard em quatro faixas, da pergunta mais frequente para a menos:
- * o que mudou (Pulso) → o que falta fazer (Curadoria) → a IA está útil? (Scoring) →
- * algo quebrou? (Operação).
+ * Dashboard em três faixas, da pergunta mais frequente para a menos:
+ * o que mudou (Pulso) → o que falta fazer (Curadoria) → quem é visto (Audiência).
  *
  * Contador solto só sobrevive aqui quando não tem leitura melhor em gráfico.
  */
@@ -34,7 +31,7 @@ export default function DashboardPage() {
     <>
       <Cabecalho
         titulo="Dashboard"
-        descricao="Uso da plataforma, curadoria da base, saúde da IA e das integrações."
+        descricao="Uso da plataforma, curadoria da base e audiência dos perfis."
       />
 
       {isLoading && <Carregando />}
@@ -106,15 +103,6 @@ export default function DashboardPage() {
             <div className="grid gap-4 lg:grid-cols-2">
               <MaisAcessados />
               <AcessosRegiao />
-            </div>
-          </section>
-
-          {/* Faixa 4 — Saúde: a IA está útil, e as fontes estão vivas? */}
-          <section className="space-y-3">
-            <h2 className="text-sm font-semibold text-muted-foreground">Saúde do sistema</h2>
-            <div className="grid gap-4 lg:grid-cols-2">
-              <SaudeScoring />
-              <SaudeOperacional />
             </div>
           </section>
         </div>
