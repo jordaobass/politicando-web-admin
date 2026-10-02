@@ -25,6 +25,20 @@
   --success: hsl(142 71% 45%);
   --warning: hsl(38 92% 50%);
 
+  /*
+    Paleta das séries dos gráficos. Separada das cores semânticas de propósito: série de
+    gráfico precisa de matizes distinguíveis entre si, enquanto --destructive/--success
+    carregam significado (erro, sucesso) que não se aplica a "quizzes" ou "cadastros".
+    Usadas como var(--grafico-N) nas props do recharts — nunca cor literal no componente.
+  */
+  --grafico-1: hsl(221 83% 53%);
+  --grafico-2: hsl(199 89% 48%);
+  --grafico-3: hsl(262 83% 58%);
+  --grafico-4: hsl(142 71% 45%);
+  --grafico-5: hsl(38 92% 50%);
+  /* Fundo neutro das barras: o "resto" do total, que não é um valor em si. */
+  --grafico-vazio: hsl(240 5% 88%);
+
   --sidebar: hsl(240 10% 6%);
   --sidebar-foreground: hsl(240 5% 84%);
   --sidebar-accent: hsl(240 8% 14%);
