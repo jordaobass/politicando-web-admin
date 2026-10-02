@@ -133,35 +133,6 @@ export interface Faltante {
   uf: string;
 }
 
-export interface SaudeScoring {
-  ultimaAnaliseEm: string | null;
-  candidaturasAnalisadas: number;
-  candidaturasAtuais: number;
-  totalScores: number;
-  /** Scores cravados em 50: existem, mas não diferenciam candidato nenhum no match. */
-  scoresNeutros: number;
-  confiancaMedia: number;
-  tokensAcumulados: number;
-}
-
-export interface IntegracaoResumo {
-  nome: string;
-  status: string | null;
-  ultimaExecucaoEm: string | null;
-  /** -1 quando nunca executou. */
-  diasParada: number;
-}
-
-export interface SaudeOperacional {
-  total: number;
-  ok: number;
-  parciais: number;
-  comErro: number;
-  nuncaExecutaram: number;
-  errosUltimos30Dias: number;
-  integracoes: IntegracaoResumo[];
-}
-
 export interface RegiaoAcesso {
   pais: string;
   regiao: string;

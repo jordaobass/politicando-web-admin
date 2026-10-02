@@ -4,6 +4,7 @@ import { ChevronRight, Globe, MapPin } from "lucide-react";
 
 import { buscarRegioes } from "@/lib/api";
 import { formatarNumero } from "@/lib/format";
+import { nomeDaCidade, nomeDaRegiao, nomeDoPais } from "@/lib/geo";
 import type { RegiaoAcesso } from "@/lib/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select } from "@/components/ui/select";
@@ -15,9 +16,10 @@ const PERIODOS = [
   { valor: 90, rotulo: "Últimos 90 dias" },
 ];
 
+/** O backend grava "??" quando a borda não informou aquele nível. */
 const DESCONHECIDO = "??";
-const exibir = (valor: string) => (valor === DESCONHECIDO ? "não informado" : valor);
 
+/** `null` = nível ainda não escolhido: abre no país de onde vem a maior parte do público. */
 type Nivel = { pais?: string; regiao?: string };
 
 /** Soma os acessos de um conjunto de linhas por uma chave (país, UF ou cidade). */
@@ -39,30 +41,51 @@ function agrupar(linhas: RegiaoAcesso[], chave: (l: RegiaoAcesso) => string) {
  */
 export function AcessosRegiao() {
   const [dias, setDias] = useState(30);
-  const [nivel, setNivel] = useState<Nivel>({});
+  const [nivel, setNivel] = useState<Nivel | null>(null);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["regioes", dias],
     queryFn: () => buscarRegioes(dias),
   });
 
+  // Quase todo acesso é do Brasil: abrir na lista de países obrigaria um clique para
+  // chegar ao que interessa (o estado). Enquanto o nível não é escolhido à mão, o card
+  // já entra no país dominante; a trilha "Países" continua disponível para subir.
+  const paisDominante = useMemo(
+    () => agrupar(data?.regioes ?? [], (l) => l.pais)[0]?.nome,
+    [data],
+  );
+
+  const atual: Nivel = nivel ?? (paisDominante ? { pais: paisDominante } : {});
+
   const linhas = useMemo(() => {
     const todas = data?.regioes ?? [];
-    if (!nivel.pais) return agrupar(todas, (l) => l.pais);
-    if (!nivel.regiao)
-      return agrupar(todas.filter((l) => l.pais === nivel.pais), (l) => l.regiao);
+    if (!atual.pais) return agrupar(todas, (l) => l.pais);
+    if (!atual.regiao)
+      return agrupar(todas.filter((l) => l.pais === atual.pais), (l) => l.regiao);
     return agrupar(
-      todas.filter((l) => l.pais === nivel.pais && l.regiao === nivel.regiao),
+      todas.filter((l) => l.pais === atual.pais && l.regiao === atual.regiao),
       (l) => l.cidade,
     );
-  }, [data, nivel]);
+  }, [data, atual.pais, atual.regiao]);
 
   const maximo = linhas[0]?.acessos ?? 0;
-  const podeDescer = !nivel.pais || !nivel.regiao;
+  const podeDescer = !atual.pais || !atual.regiao;
+
+  /** Nada a destrinchar: tudo que existe neste nível é "não informado". */
+  const semDetalhe =
+    atual.pais !== undefined && linhas.every((l) => l.nome === DESCONHECIDO) && linhas.length > 0;
+
+  /** Rótulo da linha depende do nível em que ela está: país, estado ou cidade. */
+  const rotular = (nome: string) => {
+    if (!atual.pais) return nomeDoPais(nome);
+    if (!atual.regiao) return nomeDaRegiao(atual.pais, nome);
+    return nomeDaCidade(nome);
+  };
 
   const descer = (nome: string) => {
-    if (!nivel.pais) setNivel({ pais: nome });
-    else if (!nivel.regiao) setNivel({ ...nivel, regiao: nome });
+    if (!atual.pais) setNivel({ pais: nome });
+    else if (!atual.regiao) setNivel({ ...atual, regiao: nome });
   };
 
   return (
@@ -83,7 +106,7 @@ export function AcessosRegiao() {
             value={dias}
             onChange={(e) => {
               setDias(Number(e.target.value));
-              setNivel({});
+              setNivel(null);
             }}
             aria-label="Período da origem geográfica"
           >
@@ -100,26 +123,28 @@ export function AcessosRegiao() {
           <button
             type="button"
             onClick={() => setNivel({})}
-            className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 ${nivel.pais ? "text-primary hover:underline" : "font-medium"}`}
+            className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 ${atual.pais ? "text-primary hover:underline" : "font-medium"}`}
           >
             <Globe className="size-3.5" aria-hidden="true" /> Países
           </button>
-          {nivel.pais && (
+          {atual.pais && (
             <>
               <ChevronRight className="size-3 text-muted-foreground" aria-hidden="true" />
               <button
                 type="button"
-                onClick={() => setNivel({ pais: nivel.pais })}
-                className={`rounded px-1.5 py-0.5 ${nivel.regiao ? "text-primary hover:underline" : "font-medium"}`}
+                onClick={() => setNivel({ pais: atual.pais })}
+                className={`rounded px-1.5 py-0.5 ${atual.regiao ? "text-primary hover:underline" : "font-medium"}`}
               >
-                {exibir(nivel.pais)}
+                {nomeDoPais(atual.pais)}
               </button>
             </>
           )}
-          {nivel.regiao && (
+          {atual.regiao && atual.pais && (
             <>
               <ChevronRight className="size-3 text-muted-foreground" aria-hidden="true" />
-              <span className="rounded px-1.5 py-0.5 font-medium">{exibir(nivel.regiao)}</span>
+              <span className="rounded px-1.5 py-0.5 font-medium">
+                {nomeDaRegiao(atual.pais, atual.regiao)}
+              </span>
             </>
           )}
         </nav>
@@ -145,7 +170,7 @@ export function AcessosRegiao() {
                     <span className="flex items-baseline justify-between gap-3">
                       <span className="flex min-w-0 items-center gap-1.5 text-sm">
                         <MapPin className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
-                        <span className="truncate">{exibir(l.nome)}</span>
+                        <span className="truncate">{rotular(l.nome)}</span>
                       </span>
                       <span className="shrink-0 text-xs font-medium tabular-nums">
                         {formatarNumero(l.acessos)}
@@ -164,10 +189,17 @@ export function AcessosRegiao() {
                 </li>
               ))}
             </ul>
-            {podeDescer && (
+            {semDetalhe ? (
               <p className="text-xs text-muted-foreground/70">
-                Clique numa linha para detalhar {nivel.pais ? "as cidades" : "os estados"}.
+                Estes acessos foram gravados sem estado: a borda deste ambiente informou só o
+                país. O detalhe aparece nos acessos novos.
               </p>
+            ) : (
+              podeDescer && (
+                <p className="text-xs text-muted-foreground/70">
+                  Clique numa linha para detalhar {atual.pais ? "as cidades" : "os estados"}.
+                </p>
+              )
             )}
           </>
         )}
