@@ -21,8 +21,6 @@ import type {
   FunilPublicacao,
   CoberturaDados,
   Faltante,
-  SaudeScoring,
-  SaudeOperacional,
   AcessosPorRegiao,
   UsuarioAdmin,
   PermissaoCatalogo,
@@ -143,14 +141,6 @@ export function buscarFaltantes(
   return request<PagedResult<Faltante>>(
     `/admin/metricas/cobertura/${chave}/faltantes${montarQuery({ pagina, tamanho })}`,
   );
-}
-
-export function buscarSaudeScoring(): Promise<SaudeScoring> {
-  return request<SaudeScoring>("/admin/metricas/scoring");
-}
-
-export function buscarSaudeOperacional(): Promise<SaudeOperacional> {
-  return request<SaudeOperacional>("/admin/metricas/operacao");
 }
 
 export function buscarExecucoes(limite = 50): Promise<ExecucaoLog[]> {
