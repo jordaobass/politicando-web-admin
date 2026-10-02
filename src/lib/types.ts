@@ -86,6 +86,115 @@ export interface DashboardAdmin {
   categorias: number;
 }
 
+/** Um dia da série de uso da plataforma. */
+export interface PontoSerie {
+  dia: string;
+  quizzesAnonimos: number;
+  quizzesLogados: number;
+  cadastros: number;
+  comparacoes: number;
+}
+
+export interface SerieUso {
+  dias: number;
+  pontos: PontoSerie[];
+}
+
+export interface FunilCargo {
+  cargo: string;
+  total: number;
+  publicados: number;
+}
+
+export interface FunilPublicacao {
+  total: number;
+  publicados: number;
+  porCargo: FunilCargo[];
+}
+
+export interface CoberturaItem {
+  chave: string;
+  rotulo: string;
+  comDado: number;
+  total: number;
+}
+
+export interface CoberturaDados {
+  publicados: number;
+  itens: CoberturaItem[];
+}
+
+/** Candidatura publicada que não tem determinado dado (drill-down da cobertura). */
+export interface Faltante {
+  candidaturaId: string;
+  nomeUrna: string;
+  partidoSigla: string | null;
+  cargo: string;
+  uf: string;
+}
+
+export interface SaudeScoring {
+  ultimaAnaliseEm: string | null;
+  candidaturasAnalisadas: number;
+  candidaturasAtuais: number;
+  totalScores: number;
+  /** Scores cravados em 50: existem, mas não diferenciam candidato nenhum no match. */
+  scoresNeutros: number;
+  confiancaMedia: number;
+  tokensAcumulados: number;
+}
+
+export interface IntegracaoResumo {
+  nome: string;
+  status: string | null;
+  ultimaExecucaoEm: string | null;
+  /** -1 quando nunca executou. */
+  diasParada: number;
+}
+
+export interface SaudeOperacional {
+  total: number;
+  ok: number;
+  parciais: number;
+  comErro: number;
+  nuncaExecutaram: number;
+  errosUltimos30Dias: number;
+  integracoes: IntegracaoResumo[];
+}
+
+export interface RegiaoAcesso {
+  pais: string;
+  regiao: string;
+  cidade: string;
+  acessos: number;
+}
+
+export interface AcessosPorRegiao {
+  dias: number;
+  totalAcessos: number;
+  /** Distingue "ninguém acessou" de "a borda não informou a localização". */
+  temDadoDeGeo: boolean;
+  regioes: RegiaoAcesso[];
+}
+
+/** Uma linha do ranking de perfis mais abertos. */
+export interface CandidatoMaisAcessado {
+  candidaturaId: string;
+  nomeUrna: string;
+  partidoSigla: string | null;
+  cargo: string;
+  uf: string;
+  publicado: boolean;
+  acessos: number;
+}
+
+export interface ResumoAcessos {
+  dias: number;
+  totalAcessos: number;
+  candidatosAcessados: number;
+  maisAcessados: CandidatoMaisAcessado[];
+}
+
 export interface IntegracaoAdmin {
   id: string;
   nome: string;

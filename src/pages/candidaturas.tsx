@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Eye, EyeOff, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
@@ -30,8 +30,11 @@ function rotuloOrigem(origem: string) {
 
 export default function CandidaturasPage() {
   const qc = useQueryClient();
-  const [cargo, setCargo] = React.useState("");
-  const [uf, setUf] = React.useState("");
+  // Os filtros nascem da URL: é o que permite a dash levar direto ao recorte que o gráfico
+  // apontou (ex.: clicar na barra de Dep. Federal abre /candidaturas?cargo=DeputadoFederal).
+  const [parametrosUrl] = useSearchParams();
+  const [cargo, setCargo] = React.useState(() => parametrosUrl.get("cargo") ?? "");
+  const [uf, setUf] = React.useState(() => parametrosUrl.get("uf") ?? "");
   const [busca, setBusca] = React.useState("");
   const [pagina, setPagina] = React.useState(1);
   const q = useDebounce(busca);
